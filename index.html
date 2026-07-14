@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タスクカレンダー</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- サイドバー: JSONエディタ & 操作パネル -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Task Config</h2>
+                <p>タスクデータをJSON形式で編集できます</p>
+            </div>
+            
+            <div class="preset-section">
+                <h3>プリセットデータ</h3>
+                <div class="preset-buttons">
+                    <button class="btn btn-preset" id="preset-default">デフォルト</button>
+                    <button class="btn btn-preset" id="preset-multi-day">複数日・期間テスト</button>
+                    <button class="btn btn-preset" id="preset-overlap">重複・positionテスト</button>
+                </div>
+            </div>
+
+            <div class="editor-section">
+                <div class="editor-label-container">
+                    <h3>JSONエディタ</h3>
+                    <span id="json-status" class="status-valid">Valid JSON</span>
+                </div>
+                <textarea id="json-editor" spellcheck="false"></textarea>
+                <div id="json-error" class="error-message"></div>
+                <button class="btn btn-primary" id="btn-apply">適用する</button>
+            </div>
+            
+            <div class="info-section">
+                <h3>仕様メモ</h3>
+                <ul>
+                    <li><strong>月曜日始まり</strong>のカレンダーです。</li>
+                    <li><code>position</code> でタスクの表示段数（縦位置）を指定できます。未指定時は <code>1</code> になります。</li>
+                    <li>同じ日に <code>position</code> が重複した場合、JSONの出現順に下にずれて表示されます。</li>
+                    <li>期間タスクはセル間で隙間なく連結して表示されます。</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- メインコンテンツ: カレンダー表示 -->
+        <main class="calendar-container">
+            <header class="calendar-header">
+                <div class="calendar-title-area">
+                    <h1 id="current-month-year">2026年 1月</h1>
+                </div>
+                <div class="calendar-nav">
+                    <button class="btn btn-nav" id="btn-prev">&lt;</button>
+                    <button class="btn btn-nav" id="btn-today">今日</button>
+                    <button class="btn btn-nav" id="btn-next">&gt;</button>
+                </div>
+            </header>
+
+            <div class="calendar-board">
+                <!-- 曜日ヘッダー -->
+                <div class="calendar-weekdays">
+                    <div>月</div>
+                    <div>火</div>
+                    <div>水</div>
+                    <div>木</div>
+                    <div>金</div>
+                    <div class="weekend">土</div>
+                    <div class="weekend">日</div>
+                </div>
+                <!-- 日付グリッド -->
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- JavaScriptで動的に生成 -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

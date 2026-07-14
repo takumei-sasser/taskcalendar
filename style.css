@@ -1,0 +1,550 @@
+/* ==========================================================================
+   Design Tokens & Reset
+   ========================================================================== */
+:root {
+    --bg-color: #0b0f19;
+    --card-bg: rgba(255, 255, 255, 0.03);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-hover: rgba(255, 255, 255, 0.06);
+    
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #4b5563;
+    
+    --border-color: rgba(255, 255, 255, 0.1);
+    --accent-color: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-glow: rgba(99, 102, 241, 0.4);
+    
+    --error-color: #f87171;
+    --success-color: #34d399;
+    
+    --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    --sidebar-width: 380px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+
+/* ==========================================================================
+   App Layout
+   ========================================================================== */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* ==========================================================================
+   Sidebar (Config Editor)
+   ========================================================================== */
+.sidebar {
+    width: var(--sidebar-width);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--card-border);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #a5b4fc, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-header p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Presets */
+.preset-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.preset-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Editor */
+.editor-section {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 350px;
+}
+
+.editor-label-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#json-status {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.status-valid {
+    background-color: rgba(52, 211, 153, 0.15);
+    color: var(--success-color);
+}
+
+.status-invalid {
+    background-color: rgba(248, 113, 113, 0.15);
+    color: var(--error-color);
+}
+
+#json-editor {
+    flex-grow: 1;
+    width: 100%;
+    min-height: 250px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 1rem;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+    margin-bottom: 0.75rem;
+}
+
+#json-editor:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.error-message {
+    color: var(--error-color);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: rgba(248, 113, 113, 0.1);
+    border-left: 3px solid var(--error-color);
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0 4px 4px 0;
+    display: none;
+}
+
+/* Info section */
+.info-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.info-section ul {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-section li {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    position: relative;
+    padding-left: 1rem;
+    line-height: 1.4;
+}
+
+.info-section li::before {
+    content: "•";
+    color: var(--accent-color);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+/* Buttons */
+.btn {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+
+.btn-preset {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    text-align: left;
+}
+
+.btn-preset:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(2px);
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 6px 20px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* ==========================================================================
+   Calendar Container
+   ========================================================================== */
+.calendar-container {
+    flex-grow: 1;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: calc(100% - var(--sidebar-width));
+}
+
+/* Calendar Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+}
+
+#current-month-year {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-nav {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 0.5rem 0.8rem;
+    min-width: 40px;
+}
+
+.btn-nav:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+#btn-today {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* ==========================================================================
+   Calendar Board & Grid
+   ========================================================================== */
+.calendar-board {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    flex-grow: 1;
+}
+
+/* Weekdays */
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-weekdays div {
+    padding: 1rem 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+}
+
+.calendar-weekdays .weekend {
+    color: #a5b4fc;
+}
+
+/* Day Grid */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(130px, 1fr); /* セルの最低高さを130pxにして、均等に広がるようにする */
+    background: var(--border-color); /* グリッド境界線の背景色 */
+    gap: 1px; /* 1pxのgapで境界線を表現するが、タスクバーの連結時にはマイナスマージンで打ち消す */
+}
+
+/* Day Cell */
+.calendar-day {
+    background-color: #0d1321;
+    position: relative;
+    padding: 0.5rem 0 1.5rem 0; /* 左右パディングを0にして、タスクを端まで伸ばせるようにする */
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: background-color 0.2s;
+    overflow: hidden;
+}
+
+.calendar-day:hover {
+    background-color: var(--card-hover);
+}
+
+/* 日付の数字部分 */
+.day-number-container {
+    padding: 0 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.day-number {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* 今日（現在日）の強調 */
+.calendar-day.today {
+    background-color: rgba(99, 102, 241, 0.04);
+}
+
+.calendar-day.today::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, #6366f1, #ec4899);
+    box-shadow: 0 1px 10px rgba(99, 102, 241, 0.8);
+}
+
+.calendar-day.today .day-number {
+    background: linear-gradient(135deg, var(--accent-color), #818cf8);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+/* 当月以外の日付 */
+.calendar-day.other-month {
+    background-color: #090d16;
+}
+
+.calendar-day.other-month .day-number {
+    color: var(--text-muted);
+}
+
+.calendar-day.other-month .task-bar {
+    opacity: 0.55; /* 他の月のタスクは少し薄くする */
+}
+
+/* ==========================================================================
+   Tasks Layout & Styling
+   ========================================================================== */
+.task-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* タスクバー間の隙間 */
+    width: 100%;
+    position: relative;
+}
+
+/* タスクスロット（空スペースを含む） */
+.task-slot {
+    height: 22px; /* タスクバーの固定高さ */
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* タスクバー本体 */
+.task-bar {
+    height: 22px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    user-select: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    z-index: 10;
+    width: 100%;
+}
+
+.task-bar:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    z-index: 20;
+}
+
+/* ==========================================================================
+   連結表示のためのマージンと角丸制御
+   ========================================================================== */
+
+/* 単一日タスク: 左右に余白を作り、両端を丸める */
+.task-bar.task-single {
+    border-radius: 5px;
+    margin-left: 6px;
+    margin-right: 6px;
+    width: calc(100% - 12px);
+}
+
+/* 期間タスクの開始日: 左のみ余白と角丸 */
+.task-bar.task-start {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    margin-left: 6px;
+    margin-right: -1px; /* グリッドの gap: 1px を打ち消して右端にぴったり合わせる */
+    width: calc(100% - 5px); /* 右側の余白なし */
+}
+
+/* 期間タスクの中間日: 余白なし、角丸なし、左右にぴったり広げる */
+.task-bar.task-middle {
+    border-radius: 0px;
+    margin-left: 0px;
+    margin-right: -1px; /* 左と右の両方でグリッド境界を跨ぐ */
+    width: calc(100% + 1px);
+}
+
+/* 期間タスクの終了日: 右のみ余白と角丸 */
+.task-bar.task-end {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    margin-left: 0px;
+    margin-right: 6px;
+    width: calc(100% - 6px);
+}
+
+/* 週の最初の日（月曜日）で、かつ期間の途中である場合: 左側を平らにする */
+.task-bar.week-start-middle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0px;
+    width: calc(100% + 1px);
+}
+
+/* 週の最後の日（日曜日）で、かつ期間の途中である場合: 右側を平らにする */
+.task-bar.week-end-middle {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: -1px;
+    width: calc(100% + 1px);
+}
+
+/* ==========================================================================
+   Task Gradient presets (Beautiful and premium)
+   ========================================================================== */
+.grad-1 { background: linear-gradient(90deg, #6366f1, #8b5cf6); } /* Indigo to Purple */
+.grad-2 { background: linear-gradient(90deg, #ec4899, #f43f5e); } /* Pink to Rose */
+.grad-3 { background: linear-gradient(90deg, #10b981, #059669); } /* Emerald */
+.grad-4 { background: linear-gradient(90deg, #f59e0b, #d97706); } /* Amber */
+.grad-5 { background: linear-gradient(90deg, #3b82f6, #06b6d4); } /* Blue to Cyan */
+.grad-6 { background: linear-gradient(90deg, #8b5cf6, #d946ef); } /* Purple to Fuchsia */
+.grad-7 { background: linear-gradient(90deg, #f43f5e, #f97316); } /* Rose to Orange */
+.grad-8 { background: linear-gradient(90deg, #14b8a6, #0ea5e9); } /* Teal to Sky */
+
+/* ==========================================================================
+   Responsive adjustments
+   ========================================================================== */
+@media (max-width: 1024px) {
+    .app-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--card-border);
+        max-height: 500px;
+    }
+    
+    .calendar-container {
+        max-width: 100%;
+    }
+}

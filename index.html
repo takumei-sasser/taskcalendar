@@ -12,27 +12,32 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 設定モーダル: JSONエディタ & 操作パネル -->
+        <!-- 設定モーダル: 表示月数設定 & JSONエディタ -->
         <div id="settings-modal" class="modal">
             <div class="modal-content">
                 <button class="modal-close" id="btn-modal-close" title="閉じる">&times;</button>
                 <div class="sidebar-header">
-                    <h2>Task Config</h2>
-                    <p>タスクデータをJSON形式で編集できます</p>
+                    <h2>Settings & Data</h2>
+                    <p>表示設定とデータソース</p>
                 </div>
                 
-                <div class="preset-section">
-                    <h3>プリセットデータ</h3>
-                    <div class="preset-buttons">
-                        <button class="btn btn-preset" id="preset-default">デフォルト</button>
-                        <button class="btn btn-preset" id="preset-multi-day">複数日・期間テスト</button>
-                        <button class="btn btn-preset" id="preset-overlap">重複・positionテスト</button>
+                <div class="settings-section">
+                    <h3>表示期間設定</h3>
+                    <div class="settings-form">
+                        <label>
+                            <span>過去の表示月数 (N):</span>
+                            <input type="number" id="input-past-months" min="0" max="24" value="1">
+                        </label>
+                        <label>
+                            <span>未来の表示月数 (M):</span>
+                            <input type="number" id="input-future-months" min="0" max="24" value="6">
+                        </label>
                     </div>
                 </div>
 
                 <div class="editor-section">
                     <div class="editor-label-container">
-                        <h3>JSONエディタ</h3>
+                        <h3>タスクデータ (JSON)</h3>
                         <span id="json-status" class="status-valid">Valid JSON</span>
                     </div>
                     <textarea id="json-editor" spellcheck="false"></textarea>
@@ -47,32 +52,45 @@
                         <li><code>position</code> でタスクの表示段数（縦位置）を指定できます。未指定時は <code>1</code> になります。</li>
                         <li>同じ日に <code>position</code> が重複した場合、JSONの出現順に下にずれて表示されます。</li>
                         <li>期間タスクはセル間で隙間なく連結して表示されます。</li>
-                        <li><code>category</code> プロパティでタスクのカテゴリを指定できます。</li>
+                        <li><code>category</code> と <code>description</code> をサポートしています。</li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- メインコンテンツ: カレンダー表示 -->
-        <main class="calendar-container">
+        <!-- ツールチップ (ホバーダイアログ) -->
+        <div id="tooltip-dialog" class="tooltip">
+            <div class="tooltip-title" id="tooltip-title"></div>
+            <div class="tooltip-desc" id="tooltip-desc"></div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
             <div class="sticky-header">
-                <header class="calendar-header">
-                    <div class="calendar-title-area">
-                        <h1 id="current-month-year">2026年 1月</h1>
+                <!-- グローバルアクションバー -->
+                <div class="global-actions">
+                    <div class="view-toggles">
+                        <button class="btn btn-nav active" id="btn-view-calendar">カレンダー</button>
+                        <button class="btn btn-nav" id="btn-view-table">表形式</button>
                     </div>
-                    <div class="calendar-nav">
-                        <button class="btn btn-nav" id="btn-prev">&lt;</button>
-                        <button class="btn btn-nav" id="btn-today">今日</button>
-                        <button class="btn btn-nav" id="btn-next">&gt;</button>
+                    <div class="system-actions">
+                        <button class="btn btn-nav btn-icon" id="btn-theme-toggle" title="テーマ切替">
+                            <!-- Sun/Moon Icon Placeholder -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        </button>
+                        <button class="btn btn-nav btn-icon" id="btn-download" title="単一HTMLダウンロード">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </button>
                         <button class="btn btn-nav btn-icon" id="btn-settings" title="設定を開く">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                             </svg>
                         </button>
                     </div>
-                </header>
+                </div>
 
+                <!-- カテゴリフィルター -->
                 <div class="filter-bar" id="category-filter-bar">
                     <span class="filter-label">カテゴリフィルター:</span>
                     <div class="filter-checkboxes" id="filter-checkboxes">
@@ -81,25 +99,36 @@
                 </div>
             </div>
 
-            <div class="calendar-board">
-                <!-- 曜日ヘッダー -->
-                <div class="calendar-weekdays">
-                    <div>月</div>
-                    <div>火</div>
-                    <div>水</div>
-                    <div>木</div>
-                    <div>金</div>
-                    <div class="weekend">土</div>
-                    <div class="weekend">日</div>
+            <!-- カレンダー表示コンテナ -->
+            <div id="calendar-container" class="view-container active">
+                <div id="calendar-boards-wrapper">
+                    <!-- 複数月のカレンダーボードがJSでここに生成されます -->
                 </div>
-                <!-- 日付グリッド -->
-                <div class="calendar-grid" id="calendar-grid">
-                    <!-- JavaScriptで動的に生成 -->
+            </div>
+
+            <!-- 表形式表示コンテナ -->
+            <div id="table-container" class="view-container">
+                <div class="table-wrapper">
+                    <table class="task-table" id="task-table">
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>曜日</th>
+                                <th>カテゴリ</th>
+                                <th>タスク名</th>
+                                <th>詳細 (Description)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-table-body">
+                            <!-- JSで生成 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
     </div>
 
+    <script src="data.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

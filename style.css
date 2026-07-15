@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Design Tokens & Reset
+   Design Tokens & Reset (Dark Mode Default)
    ========================================================================== */
 :root {
     --bg-color: #0b0f19;
@@ -22,7 +22,34 @@
     --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
-    --sticky-header-height: auto; /* JS で動的に管理しないため auto */
+    --bg-gradient-1: rgba(99, 102, 241, 0.1);
+    --bg-gradient-2: rgba(236, 72, 153, 0.08);
+    --modal-bg: rgba(15, 23, 42, 0.95);
+    --tooltip-bg: rgba(0, 0, 0, 0.85);
+}
+
+/* ==========================================================================
+   Light Mode Overrides
+   ========================================================================== */
+body.light-mode {
+    --bg-color: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --card-border: rgba(0, 0, 0, 0.1);
+    --card-hover: rgba(255, 255, 255, 1);
+    
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    
+    --border-color: rgba(0, 0, 0, 0.08);
+    --accent-color: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-glow: rgba(79, 70, 229, 0.3);
+    
+    --bg-gradient-1: rgba(99, 102, 241, 0.05);
+    --bg-gradient-2: rgba(236, 72, 153, 0.05);
+    --modal-bg: rgba(255, 255, 255, 0.98);
+    --tooltip-bg: rgba(0, 0, 0, 0.85); /* ツールチップは常に黒系 */
 }
 
 * {
@@ -38,299 +65,35 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, var(--bg-gradient-1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, var(--bg-gradient-2) 0px, transparent 50%);
     background-attachment: fixed;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-/* ==========================================================================
-   App Layout
-   ========================================================================== */
 .app-container {
     display: flex;
+    flex-direction: column;
     min-height: 100vh;
     width: 100%;
 }
 
 /* ==========================================================================
-   Settings Modal
-   ========================================================================== */
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: rgba(5, 8, 18, 0.75);
-    backdrop-filter: blur(6px);
-    align-items: center;
-    justify-content: center;
-    animation: modal-fade-in 0.2s ease;
-}
-
-.modal.is-open {
-    display: flex;
-}
-
-@keyframes modal-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-.modal-content {
-    position: relative;
-    width: 520px;
-    max-width: calc(100vw - 2rem);
-    max-height: 90vh;
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    overflow-y: auto;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-    animation: modal-slide-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes modal-slide-in {
-    from { transform: translateY(20px) scale(0.97); opacity: 0; }
-    to   { transform: translateY(0)    scale(1);    opacity: 1; }
-}
-
-.modal-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--card-border);
-    color: var(--text-secondary);
-    font-size: 1.4rem;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    line-height: 1;
-    padding: 0;
-    font-family: var(--font-sans);
-}
-
-.modal-close:hover {
-    background: rgba(248, 113, 113, 0.15);
-    color: var(--error-color);
-    border-color: rgba(248, 113, 113, 0.3);
-}
-
-/* モーダル内コンテンツ共通 */
-.sidebar-header h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    background: linear-gradient(to right, #a5b4fc, #f472b6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-}
-
-.sidebar-header p {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-
-/* Presets */
-.preset-section {
-    display: flex;
-    flex-direction: column;
-}
-
-.preset-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-/* Editor */
-.editor-section {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    min-height: 0;
-}
-
-.editor-label-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-#json-status {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    font-weight: 600;
-}
-
-.status-valid {
-    background-color: rgba(52, 211, 153, 0.15);
-    color: var(--success-color);
-}
-
-.status-invalid {
-    background-color: rgba(248, 113, 113, 0.15);
-    color: var(--error-color);
-}
-
-#json-editor {
-    width: 100%;
-    height: 280px;
-    min-height: 180px;
-    max-height: 380px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    color: #e5e7eb;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    padding: 1rem;
-    resize: vertical;
-    outline: none;
-    line-height: 1.5;
-    transition: border-color 0.2s;
-    margin-bottom: 0.75rem;
-}
-
-#json-editor:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
-
-.error-message {
-    color: var(--error-color);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    background: rgba(248, 113, 113, 0.1);
-    border-left: 3px solid var(--error-color);
-    padding: 0.5rem;
-    margin-bottom: 0.75rem;
-    border-radius: 0 4px 4px 0;
-    display: none;
-}
-
-/* Info section */
-.info-section {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    padding: 1rem;
-}
-
-.info-section ul {
-    list-style-type: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.info-section li {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    position: relative;
-    padding-left: 1rem;
-    line-height: 1.4;
-}
-
-.info-section li::before {
-    content: "•";
-    color: var(--accent-color);
-    position: absolute;
-    left: 0;
-    font-weight: bold;
-}
-
-/* Buttons */
-.btn {
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 0.6rem 1rem;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    text-align: center;
-}
-
-.btn-preset {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-    border: 1px solid var(--card-border);
-    text-align: left;
-}
-
-.btn-preset:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateX(2px);
-}
-
-.btn-primary {
-    background: var(--accent-color);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 4px 14px var(--accent-glow);
-}
-
-.btn-primary:hover {
-    background: var(--accent-hover);
-    box-shadow: 0 6px 20px var(--accent-glow);
-    transform: translateY(-1px);
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-/* ==========================================================================
-   Calendar Container
-   ========================================================================== */
-.calendar-container {
-    flex-grow: 1;
-    width: 100%;
-    padding: 0 2.5rem 2.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-/* ==========================================================================
-   Sticky Header (カレンダーヘッダー + フィルターバーをまとめて固定)
+   Header & Controls
    ========================================================================== */
 .sticky-header {
     position: sticky;
     top: 0;
     z-index: 100;
     background: var(--bg-color);
-    padding: 1.5rem 0 0.75rem;
+    padding: 1.5rem 2.5rem 0.75rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    transition: background-color 0.3s;
 }
 
-/* Calendar Header */
-.calendar-header {
+.global-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -338,40 +101,36 @@ h3 {
     border: 1px solid var(--card-border);
     backdrop-filter: blur(10px);
     border-radius: 12px;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem;
 }
 
-#current-month-year {
-    font-size: 1.6rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-}
-
-.calendar-nav {
+.view-toggles, .system-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 .btn-nav {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(128, 128, 128, 0.1);
     color: var(--text-primary);
     border: 1px solid var(--card-border);
-    padding: 0.5rem 0.8rem;
-    min-width: 40px;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
 }
-
 .btn-nav:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(128, 128, 128, 0.2);
+}
+.btn-nav.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-hover);
 }
 
-#btn-today {
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-
-/* 歯車ボタン */
 .btn-icon {
     display: flex;
     align-items: center;
@@ -380,26 +139,13 @@ h3 {
     min-width: 40px;
     height: 40px;
     color: var(--text-secondary);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.btn-icon svg {
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
 .btn-icon:hover {
-    background: rgba(99, 102, 241, 0.12);
-    border-color: rgba(99, 102, 241, 0.35);
-    color: #a5b4fc;
+    color: var(--text-primary);
+    background: rgba(128, 128, 128, 0.15);
 }
 
-.btn-icon:hover svg {
-    transform: rotate(90deg);
-}
-
-/* ==========================================================================
-   Category Filter Bar
-   ========================================================================== */
+/* Filter Bar */
 .filter-bar {
     display: flex;
     align-items: center;
@@ -412,24 +158,17 @@ h3 {
     flex-wrap: wrap;
     min-height: 48px;
 }
-
 .filter-label {
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    white-space: nowrap;
-    flex-shrink: 0;
 }
-
 .filter-checkboxes {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
-
-/* カスタムチェックボックスラベル */
 .filter-chip {
     display: inline-flex;
     align-items: center;
@@ -441,266 +180,319 @@ h3 {
     font-weight: 500;
     cursor: pointer;
     user-select: none;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--card-border);
+    transition: all 0.18s;
+    background: rgba(128, 128, 128, 0.1);
     color: var(--text-secondary);
-    white-space: nowrap;
 }
-
-.filter-chip:hover {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: var(--text-primary);
-}
-
-.filter-chip input[type="checkbox"] {
-    display: none;
-}
-
 .filter-chip.is-checked {
     color: white;
     border-color: transparent;
 }
-
-/* チェック済みアイコン（インジケーター） */
 .filter-chip-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: currentColor;
     opacity: 0.7;
-    flex-shrink: 0;
-    transition: opacity 0.15s;
 }
-
 .filter-chip.is-checked .filter-chip-dot {
     opacity: 1;
 }
 
 /* ==========================================================================
-   Calendar Board & Grid
+   Main Content Views
    ========================================================================== */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.view-container {
+    display: none;
+    padding: 0 2.5rem 2.5rem;
+}
+.view-container.active {
+    display: block;
+}
+
+/* カレンダーボード (複数月用) */
+#calendar-boards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.month-board {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.month-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.month-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
 .calendar-board {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    backdrop-filter: blur(10px);
     border-radius: 16px;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    flex-grow: 1;
-    margin-top: 0.75rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
-
-/* Weekdays */
 .calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(128, 128, 128, 0.1);
     border-bottom: 1px solid var(--border-color);
 }
-
 .calendar-weekdays div {
-    padding: 1rem 0.5rem;
+    padding: 0.75rem 0.5rem;
     text-align: center;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-secondary);
-    letter-spacing: 0.05em;
 }
-
-.calendar-weekdays .weekend {
-    color: #a5b4fc;
-}
-
-/* Day Grid */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: minmax(120px, 1fr);
+    grid-auto-rows: minmax(140px, auto); /* 内容に合わせて伸びる */
     background: var(--border-color);
     gap: 1px;
 }
-
-/* Day Cell */
 .calendar-day {
-    background-color: #0d1321;
-    position: relative;
+    background-color: var(--bg-color); /* ライトモード時は白系、ダーク時は黒系 */
     padding: 0.5rem 0 1.5rem 0;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    transition: background-color 0.2s;
-    overflow: hidden;
+    position: relative;
 }
-
-.calendar-day:hover {
-    background-color: var(--card-hover);
+.calendar-day.other-month {
+    background-color: rgba(128, 128, 128, 0.03);
 }
-
-/* 日付の数字部分 */
-.day-number-container {
-    padding: 0 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.25rem;
-}
-
-.day-number {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-/* 今日（現在日）の強調 */
-.calendar-day.today {
-    background-color: rgba(99, 102, 241, 0.04);
-}
-
 .calendar-day.today::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
     background: linear-gradient(to right, #6366f1, #ec4899);
-    box-shadow: 0 1px 10px rgba(99, 102, 241, 0.8);
 }
-
-.calendar-day.today .day-number {
-    background: linear-gradient(135deg, var(--accent-color), #818cf8);
-    color: white;
+.day-number-container {
+    padding: 0 0.75rem;
+    margin-bottom: 0.25rem;
+}
+.day-number {
+    font-size: 0.9rem;
     font-weight: 600;
-    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    color: var(--text-secondary);
 }
-
-/* 当月以外の日付 */
-.calendar-day.other-month {
-    background-color: #090d16;
-}
-
-.calendar-day.other-month .day-number {
-    color: var(--text-muted);
-}
-
-.calendar-day.other-month .task-bar {
-    opacity: 0.55;
+.calendar-day.today .day-number {
+    color: var(--accent-color);
 }
 
 /* ==========================================================================
-   Tasks Layout & Styling
+   Tasks (2行固定・省略対応)
    ========================================================================== */
 .task-container {
     display: flex;
     flex-direction: column;
     gap: 3px;
     width: 100%;
-    position: relative;
 }
-
-/* タスクスロット（空スペースを含む） */
 .task-slot {
-    height: 22px;
+    height: 40px; /* 2行分の高さ (約14px * 1.4 * 2 = 39.2) を確保 */
     width: 100%;
     display: flex;
     align-items: center;
 }
-
-/* タスクバー本体 */
 .task-bar {
-    height: 22px;
+    height: 40px;
     font-size: 0.75rem;
     font-weight: 600;
     color: white;
-    display: flex;
-    align-items: center;
-    padding: 0 0.5rem;
-    white-space: nowrap;
+    padding: 0.25rem 0.5rem;
+    line-height: 1.3;
     overflow: hidden;
-    text-overflow: ellipsis;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 2行固定 */
+    -webkit-box-orient: vertical;
+    white-space: normal; /* 折り返しを許可 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     user-select: none;
-    transition: transform 0.15s, box-shadow 0.15s;
-    z-index: 10;
+    transition: transform 0.15s, opacity 0.3s;
     width: 100%;
 }
 
-.task-bar:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
-    z-index: 20;
+/* フィルタOFF時の半透明化 */
+.task-bar.task-inactive {
+    opacity: 0.2 !important; /* 存在感は残すが目立たせない */
+    pointer-events: none; /* ホバーなども無効化 */
 }
 
+/* 角丸制御 */
+.task-bar.task-single { border-radius: 5px; margin: 0 6px; width: calc(100% - 12px); }
+.task-bar.task-start { border-radius: 5px 0 0 5px; margin-left: 6px; margin-right: -1px; width: calc(100% - 5px); }
+.task-bar.task-middle { border-radius: 0; margin-left: 0; margin-right: -1px; width: calc(100% + 1px); }
+.task-bar.task-end { border-radius: 0 5px 5px 0; margin-left: 0; margin-right: 6px; width: calc(100% - 6px); }
+.task-bar.week-start-middle { border-radius: 0; margin-left: 0; width: calc(100% + 1px); }
+.task-bar.week-end-middle { border-radius: 0; margin-right: -1px; width: calc(100% + 1px); }
+
 /* ==========================================================================
-   連結表示のためのマージンと角丸制御
+   Tooltips
    ========================================================================== */
-
-/* 単一日タスク: 左右に余白を作り、両端を丸める */
-.task-bar.task-single {
-    border-radius: 5px;
-    margin-left: 6px;
-    margin-right: 6px;
-    width: calc(100% - 12px);
+.tooltip {
+    position: fixed;
+    top: 0; left: 0;
+    background: var(--tooltip-bg);
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    pointer-events: none;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    max-width: 300px;
+    font-size: 0.85rem;
 }
-
-/* 期間タスクの開始日: 左のみ余白と角丸 */
-.task-bar.task-start {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
-    margin-left: 6px;
-    margin-right: -1px;
-    width: calc(100% - 5px);
+.tooltip.show {
+    opacity: 1;
+    visibility: visible;
 }
-
-/* 期間タスクの中間日: 余白なし、角丸なし */
-.task-bar.task-middle {
-    border-radius: 0px;
-    margin-left: 0px;
-    margin-right: -1px;
-    width: calc(100% + 1px);
+.tooltip-title {
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.4rem;
 }
-
-/* 期間タスクの終了日: 右のみ余白と角丸 */
-.task-bar.task-end {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
-    border-top-left-radius: 0px;
-    border-bottom-left-radius: 0px;
-    margin-left: 0px;
-    margin-right: 6px;
-    width: calc(100% - 6px);
-}
-
-/* 週の最初の日（月曜日）で、かつ期間の途中 */
-.task-bar.week-start-middle {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: 0px;
-    width: calc(100% + 1px);
-}
-
-/* 週の最後の日（日曜日）で、かつ期間の途中 */
-.task-bar.week-end-middle {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-right: -1px;
-    width: calc(100% + 1px);
+.tooltip-desc {
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: pre-wrap;
 }
 
 /* ==========================================================================
-   Task Gradient presets (Beautiful and premium)
+   Table View
+   ========================================================================== */
+.table-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 1rem;
+}
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: left;
+}
+.task-table th, .task-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.task-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(128, 128, 128, 0.05);
+}
+.task-table tr:hover td {
+    background: var(--card-hover);
+}
+/* 同日複数タスクの場合、日付と曜日セルは上揃えにする */
+.task-table td {
+    vertical-align: top;
+}
+.table-color-dot {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+/* ==========================================================================
+   Settings Modal
+   ========================================================================== */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+.modal.is-open { display: flex; }
+.modal-content {
+    background: var(--modal-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 600px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+.modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.settings-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.settings-form label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+.settings-form input {
+    width: 80px;
+    padding: 0.4rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    text-align: right;
+}
+#json-editor {
+    width: 100%;
+    height: 200px;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   20 Gradient Presets
    ========================================================================== */
 .grad-1 { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
 .grad-2 { background: linear-gradient(90deg, #ec4899, #f43f5e); }
@@ -710,44 +502,37 @@ h3 {
 .grad-6 { background: linear-gradient(90deg, #8b5cf6, #d946ef); }
 .grad-7 { background: linear-gradient(90deg, #f43f5e, #f97316); }
 .grad-8 { background: linear-gradient(90deg, #14b8a6, #0ea5e9); }
+.grad-9 { background: linear-gradient(90deg, #ef4444, #b91c1c); }
+.grad-10 { background: linear-gradient(90deg, #84cc16, #4d7c0f); }
+.grad-11 { background: linear-gradient(90deg, #06b6d4, #0369a1); }
+.grad-12 { background: linear-gradient(90deg, #a855f7, #6b21a8); }
+.grad-13 { background: linear-gradient(90deg, #f472b6, #be185d); }
+.grad-14 { background: linear-gradient(90deg, #fbbf24, #b45309); }
+.grad-15 { background: linear-gradient(90deg, #34d399, #047857); }
+.grad-16 { background: linear-gradient(90deg, #818cf8, #3730a3); }
+.grad-17 { background: linear-gradient(90deg, #fb923c, #c2410c); }
+.grad-18 { background: linear-gradient(90deg, #4ade80, #15803d); }
+.grad-19 { background: linear-gradient(90deg, #2dd4bf, #0f766e); }
+.grad-20 { background: linear-gradient(90deg, #f87171, #991b1b); }
 
-/* カテゴリフィルターチップ ─ grad カラーとの対応色 */
-.chip-grad-1 { background: linear-gradient(90deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25)); border-color: rgba(99,102,241,0.45); }
-.chip-grad-1.is-checked { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
-.chip-grad-2 { background: linear-gradient(90deg, rgba(236,72,153,0.25), rgba(244,63,94,0.25)); border-color: rgba(236,72,153,0.45); }
-.chip-grad-2.is-checked { background: linear-gradient(90deg, #ec4899, #f43f5e); }
-.chip-grad-3 { background: linear-gradient(90deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25)); border-color: rgba(16,185,129,0.45); }
-.chip-grad-3.is-checked { background: linear-gradient(90deg, #10b981, #059669); }
-.chip-grad-4 { background: linear-gradient(90deg, rgba(245,158,11,0.25), rgba(217,119,6,0.25)); border-color: rgba(245,158,11,0.45); }
-.chip-grad-4.is-checked { background: linear-gradient(90deg, #f59e0b, #d97706); }
-.chip-grad-5 { background: linear-gradient(90deg, rgba(59,130,246,0.25), rgba(6,182,212,0.25)); border-color: rgba(59,130,246,0.45); }
-.chip-grad-5.is-checked { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
-.chip-grad-6 { background: linear-gradient(90deg, rgba(139,92,246,0.25), rgba(217,70,239,0.25)); border-color: rgba(139,92,246,0.45); }
-.chip-grad-6.is-checked { background: linear-gradient(90deg, #8b5cf6, #d946ef); }
-.chip-grad-7 { background: linear-gradient(90deg, rgba(244,63,94,0.25), rgba(249,115,22,0.25)); border-color: rgba(244,63,94,0.45); }
-.chip-grad-7.is-checked { background: linear-gradient(90deg, #f43f5e, #f97316); }
-.chip-grad-8 { background: linear-gradient(90deg, rgba(20,184,166,0.25), rgba(14,165,233,0.25)); border-color: rgba(20,184,166,0.45); }
-.chip-grad-8.is-checked { background: linear-gradient(90deg, #14b8a6, #0ea5e9); }
-.chip-default { background: rgba(255,255,255,0.06); border-color: var(--card-border); }
-.chip-default.is-checked { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white; }
-
-/* ==========================================================================
-   Responsive adjustments
-   ========================================================================== */
-@media (max-width: 768px) {
-    .calendar-container {
-        padding: 0 1rem 1rem;
-    }
-
-    .sticky-header {
-        padding: 0.75rem 0 0.5rem;
-    }
-
-    .filter-bar {
-        padding: 0.5rem 0.75rem;
-    }
-
-    .calendar-grid {
-        grid-auto-rows: minmax(80px, 1fr);
-    }
-}
+/* チップカラー生成の補助 (JSで同等に扱えるように) */
+.chip-grad-1.is-checked { background: linear-gradient(90deg, #6366f1, #8b5cf6); border-color: transparent; }
+.chip-grad-2.is-checked { background: linear-gradient(90deg, #ec4899, #f43f5e); border-color: transparent; }
+.chip-grad-3.is-checked { background: linear-gradient(90deg, #10b981, #059669); border-color: transparent; }
+.chip-grad-4.is-checked { background: linear-gradient(90deg, #f59e0b, #d97706); border-color: transparent; }
+.chip-grad-5.is-checked { background: linear-gradient(90deg, #3b82f6, #06b6d4); border-color: transparent; }
+.chip-grad-6.is-checked { background: linear-gradient(90deg, #8b5cf6, #d946ef); border-color: transparent; }
+.chip-grad-7.is-checked { background: linear-gradient(90deg, #f43f5e, #f97316); border-color: transparent; }
+.chip-grad-8.is-checked { background: linear-gradient(90deg, #14b8a6, #0ea5e9); border-color: transparent; }
+.chip-grad-9.is-checked { background: linear-gradient(90deg, #ef4444, #b91c1c); border-color: transparent; }
+.chip-grad-10.is-checked { background: linear-gradient(90deg, #84cc16, #4d7c0f); border-color: transparent; }
+.chip-grad-11.is-checked { background: linear-gradient(90deg, #06b6d4, #0369a1); border-color: transparent; }
+.chip-grad-12.is-checked { background: linear-gradient(90deg, #a855f7, #6b21a8); border-color: transparent; }
+.chip-grad-13.is-checked { background: linear-gradient(90deg, #f472b6, #be185d); border-color: transparent; }
+.chip-grad-14.is-checked { background: linear-gradient(90deg, #fbbf24, #b45309); border-color: transparent; }
+.chip-grad-15.is-checked { background: linear-gradient(90deg, #34d399, #047857); border-color: transparent; }
+.chip-grad-16.is-checked { background: linear-gradient(90deg, #818cf8, #3730a3); border-color: transparent; }
+.chip-grad-17.is-checked { background: linear-gradient(90deg, #fb923c, #c2410c); border-color: transparent; }
+.chip-grad-18.is-checked { background: linear-gradient(90deg, #4ade80, #15803d); border-color: transparent; }
+.chip-grad-19.is-checked { background: linear-gradient(90deg, #2dd4bf, #0f766e); border-color: transparent; }
+.chip-grad-20.is-checked { background: linear-gradient(90deg, #f87171, #991b1b); border-color: transparent; }

@@ -1,137 +1,48 @@
 // ==========================================================================
-// Preset Data Definitions (category フィールド追加)
+// Application State & Configuration
 // ==========================================================================
-const presets = {
-    default: [
-        {
-            "id": 1,
-            "title": "新年休暇 (期間タスク)",
-            "dates": ["2026-01-01 - 2026-01-05"],
-            "position": 1,
-            "color": "grad-1",
-            "category": "休暇"
-        },
-        {
-            "id": 2,
-            "title": "タスクA (複数日指定)",
-            "dates": ["2026-01-01", "2026-01-03", "2026-01-05"],
-            "position": 2,
-            "color": "grad-2",
-            "category": "個人"
-        },
-        {
-            "id": 3,
-            "title": "スロット1重複テストA",
-            "dates": ["2026-01-03"],
-            "position": 1,
-            "color": "grad-3",
-            "category": "テスト"
-        },
-        {
-            "id": 4,
-            "title": "スロット1重複テストB (自動で段下へ)",
-            "dates": ["2026-01-03"],
-            "position": 1,
-            "color": "grad-4",
-            "category": "テスト"
-        },
-        {
-            "id": 5,
-            "title": "出張 (週またぎ期間)",
-            "dates": ["2026-01-08 - 2026-01-14"],
-            "position": 1,
-            "color": "grad-5",
-            "category": "仕事"
-        },
-        {
-            "id": 6,
-            "title": "プロジェクト会議 (未指定は1)",
-            "dates": ["2026-01-14"],
-            "color": "grad-6",
-            "category": "仕事"
-        }
-    ],
-    multiDay: [
-        {
-            "id": 1,
-            "title": "超長期プロジェクト",
-            "dates": ["2026-01-05 - 2026-01-25"],
-            "position": 1,
-            "color": "grad-7",
-            "category": "仕事"
-        },
-        {
-            "id": 2,
-            "title": "飛び石ミーティング",
-            "dates": ["2026-01-06", "2026-01-08", "2026-01-13", "2026-01-15", "2026-01-20", "2026-01-22"],
-            "position": 2,
-            "color": "grad-8",
-            "category": "仕事"
-        },
-        {
-            "id": 3,
-            "title": "中間レビュー",
-            "dates": ["2026-01-15"],
-            "position": 3,
-            "color": "grad-3",
-            "category": "個人"
-        }
-    ],
-    overlap: [
-        {
-            "id": 1,
-            "title": "最優先タスク (段3指定)",
-            "dates": ["2026-01-10 - 2026-01-12"],
-            "position": 3,
-            "color": "grad-1",
-            "category": "仕事"
-        },
-        {
-            "id": 2,
-            "title": "通常タスクA (段1指定)",
-            "dates": ["2026-01-10"],
-            "position": 1,
-            "color": "grad-2",
-            "category": "個人"
-        },
-        {
-            "id": 3,
-            "title": "通常タスクB (段1指定 -> 衝突回避で段2へ)",
-            "dates": ["2026-01-10"],
-            "position": 1,
-            "color": "grad-3",
-            "category": "テスト"
-        },
-        {
-            "id": 4,
-            "title": "通常タスクC (段1指定 -> 段1,2,3が埋まっているため段4へ)",
-            "dates": ["2026-01-10"],
-            "position": 1,
-            "color": "grad-4",
-            "category": "テスト"
-        },
-        {
-            "id": 5,
-            "title": "通常タスクD (段2指定 -> 段2,3,4が埋まっているため段5へ)",
-            "dates": ["2026-01-10"],
-            "position": 2,
-            "color": "grad-5",
-            "category": "個人"
-        }
-    ]
-};
+let activeTasks = [];
+let categoryVisibility = {}; // key: カテゴリ名, value: boolean
+let pastMonths = 1;   // 設定: 過去Nヶ月
+let futureMonths = 6; // 設定: 未来Mヶ月
+let currentBaseYear = new Date().getFullYear();
+let currentBaseMonth = new Date().getMonth();
+
+// DOM Elements
+const elCalendarContainer = document.getElementById('calendar-container');
+const elBoardsWrapper     = document.getElementById('calendar-boards-wrapper');
+const elTableContainer    = document.getElementById('table-container');
+const elTableBody         = document.getElementById('task-table-body');
+const elFilterBar         = document.getElementById('category-filter-bar');
+const elFilterCheckboxes  = document.getElementById('filter-checkboxes');
+
+const elBtnViewCalendar = document.getElementById('btn-view-calendar');
+const elBtnViewTable    = document.getElementById('btn-view-table');
+const elBtnThemeToggle  = document.getElementById('btn-theme-toggle');
+const elBtnDownload     = document.getElementById('btn-download');
+const elBtnSettings     = document.getElementById('btn-settings');
+const elBtnApply        = document.getElementById('btn-apply');
+
+const elModal           = document.getElementById('settings-modal');
+const elBtnModalClose   = document.getElementById('btn-modal-close');
+const elInputPast       = document.getElementById('input-past-months');
+const elInputFuture     = document.getElementById('input-future-months');
+const elJsonEditor      = document.getElementById('json-editor');
+const elJsonStatus      = document.getElementById('json-status');
+const elJsonError       = document.getElementById('json-error');
+
+const elTooltip         = document.getElementById('tooltip-dialog');
+const elTooltipTitle    = document.getElementById('tooltip-title');
+const elTooltipDesc     = document.getElementById('tooltip-desc');
 
 // ==========================================================================
-// Date Utility Functions
+// Utility: Date & Conflict
 // ==========================================================================
-
-// 安全な日付解析 (タイムゾーンの影響を受けない)
 function parseDate(dateStr) {
     const [year, month, day] = dateStr.trim().split('-').map(Number);
     return new Date(year, month - 1, day);
 }
 
-// 安全な日付フォーマット (YYYY-MM-DD)
 function formatDate(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -139,12 +50,10 @@ function formatDate(date) {
     return `${y}-${m}-${d}`;
 }
 
-// 開始日から終了日までの全日付を配列で取得
 function getDatesInRange(startDateStr, endDateStr) {
     const dates = [];
     let current = parseDate(startDateStr);
     const end = parseDate(endDateStr);
-    
     let count = 0;
     while (current <= end && count < 366) {
         dates.push(formatDate(current));
@@ -154,40 +63,27 @@ function getDatesInRange(startDateStr, endDateStr) {
     return dates;
 }
 
-// タスクのdates定義を展開して、全対象日付のフラットな配列を作る
 function expandTaskDates(datesArray) {
     const allDates = new Set();
     const rangeRegex = /^(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})$/;
-
-    datesArray.forEach(dateItem => {
+    (datesArray || []).forEach(dateItem => {
         const trimmed = dateItem.trim();
         const match = trimmed.match(rangeRegex);
         if (match) {
-            const start = match[1];
-            const end = match[2];
-            const range = getDatesInRange(start, end);
-            range.forEach(d => allDates.add(d));
+            getDatesInRange(match[1], match[2]).forEach(d => allDates.add(d));
         } else {
             allDates.add(trimmed);
         }
     });
-
     return Array.from(allDates).sort();
 }
 
-// ==========================================================================
-// Task Positioning Logic (Conflict Resolution)
-// ==========================================================================
-
 function resolveTaskPositions(tasks) {
     const slotOccupancy = {};
-    
     return tasks.map(task => {
         const expandedDates = expandTaskDates(task.dates || []);
         const preferredPos = (task.position !== undefined && task.position !== null) ? parseInt(task.position, 10) : 1;
-        
-        let resolvedPos = preferredPos;
-        if (resolvedPos < 1) resolvedPos = 1;
+        let resolvedPos = Math.max(preferredPos, 1);
         
         let hasConflict = true;
         while (hasConflict) {
@@ -198,133 +94,52 @@ function resolveTaskPositions(tasks) {
                     break;
                 }
             }
-            if (hasConflict) {
-                resolvedPos++;
-            }
+            if (hasConflict) resolvedPos++;
         }
-        
         expandedDates.forEach(dateStr => {
-            if (!slotOccupancy[dateStr]) {
-                slotOccupancy[dateStr] = new Set();
-            }
+            if (!slotOccupancy[dateStr]) slotOccupancy[dateStr] = new Set();
             slotOccupancy[dateStr].add(resolvedPos);
         });
-
-        return {
-            ...task,
-            resolvedPosition: resolvedPos,
-            expandedDates: expandedDates
-        };
+        return { ...task, resolvedPosition: resolvedPos, expandedDates };
     });
 }
 
-// ==========================================================================
-// Application State
-// ==========================================================================
-let currentYear = 2026;
-let currentMonth = 0; // 0 = 1月
-let activeTasks = [];
-
-// カテゴリごとの表示・非表示状態 (key: カテゴリ名, value: boolean)
-const categoryVisibility = {};
-
-// DOM Elements
-const elCalendarGrid   = document.getElementById('calendar-grid');
-const elCurrentMonthYear = document.getElementById('current-month-year');
-const elJsonEditor     = document.getElementById('json-editor');
-const elJsonStatus     = document.getElementById('json-status');
-const elJsonError      = document.getElementById('json-error');
-const elFilterBar      = document.getElementById('category-filter-bar');
-const elFilterCheckboxes = document.getElementById('filter-checkboxes');
-
-const elBtnPrev     = document.getElementById('btn-prev');
-const elBtnNext     = document.getElementById('btn-next');
-const elBtnToday    = document.getElementById('btn-today');
-const elBtnApply    = document.getElementById('btn-apply');
-const elBtnSettings = document.getElementById('btn-settings');
-
-const elModal        = document.getElementById('settings-modal');
-const elBtnModalClose = document.getElementById('btn-modal-close');
-
-// Presets Elements
-const elPresetDefault  = document.getElementById('preset-default');
-const elPresetMultiDay = document.getElementById('preset-multi-day');
-const elPresetOverlap  = document.getElementById('preset-overlap');
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 // ==========================================================================
-// Modal Control
+// Data Initialization & Filtering
 // ==========================================================================
-
-function openModal() {
-    elModal.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-    elModal.classList.remove('is-open');
-    document.body.style.overflow = '';
-}
-
-elBtnSettings.addEventListener('click', openModal);
-elBtnModalClose.addEventListener('click', closeModal);
-
-// モーダル背景クリックで閉じる
-elModal.addEventListener('click', (e) => {
-    if (e.target === elModal) closeModal();
-});
-
-// Escape キーで閉じる
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && elModal.classList.contains('is-open')) {
-        closeModal();
+async function loadData() {
+    try {
+        if (typeof calendarData !== 'undefined') {
+            activeTasks = calendarData;
+        } else {
+            console.warn("calendarData is not defined. Starting with empty tasks.");
+            activeTasks = [];
+        }
+    } catch (e) {
+        console.warn("Failed to load data, starting with empty tasks.", e);
+        if (!activeTasks || activeTasks.length === 0) activeTasks = [];
     }
-});
-
-// ==========================================================================
-// Category Filter
-// ==========================================================================
-
-/**
- * color 値 (例: "grad-1") からチップ用 CSS クラス名を返す。
- * カテゴリには複数のタスクがある場合があるため、
- * 最初に見つかったタスクの color を代表色として使う。
- */
-function chipClassFromColor(colorValue) {
-    if (colorValue && /^grad-\d+$/.test(colorValue)) {
-        return `chip-${colorValue}`;
-    }
-    return 'chip-default';
+    elJsonEditor.value = JSON.stringify(activeTasks, null, 4);
+    rebuildCategoryFilter();
+    renderAllViews();
+    scrollToCurrentMonth();
 }
 
-/**
- * activeTasks からカテゴリの一覧を抽出し、
- * categoryVisibility を更新してフィルターチップ UI を再構築する。
- */
 function rebuildCategoryFilter() {
-    // カテゴリ名 -> 代表 color のマップ
     const categoryColors = {};
     activeTasks.forEach(task => {
         const cat = (task.category && task.category.trim()) ? task.category.trim() : '未分類';
-        if (!(cat in categoryColors)) {
-            categoryColors[cat] = task.color || 'grad-1';
-        }
+        if (!(cat in categoryColors)) categoryColors[cat] = task.color || 'grad-1';
     });
 
     const categories = Object.keys(categoryColors);
-
-    // 新しいカテゴリは「表示」で追加、既存のカテゴリは状態を維持、
-    // なくなったカテゴリはキーを削除
     const existingCats = Object.keys(categoryVisibility);
-    existingCats.forEach(cat => {
-        if (!categories.includes(cat)) delete categoryVisibility[cat];
-    });
-    categories.forEach(cat => {
-        if (!(cat in categoryVisibility)) categoryVisibility[cat] = true;
-    });
+    existingCats.forEach(cat => { if (!categories.includes(cat)) delete categoryVisibility[cat]; });
+    categories.forEach(cat => { if (!(cat in categoryVisibility)) categoryVisibility[cat] = true; });
 
-    // UI の再構築
     elFilterCheckboxes.innerHTML = '';
-
     if (categories.length === 0) {
         elFilterBar.style.display = 'none';
         return;
@@ -332,25 +147,24 @@ function rebuildCategoryFilter() {
     elFilterBar.style.display = 'flex';
 
     categories.forEach(cat => {
-        const colorClass = chipClassFromColor(categoryColors[cat]);
+        const cColor = categoryColors[cat];
+        const colorClass = (cColor && /^grad-\d+$/.test(cColor)) ? `chip-${cColor}` : 'chip-default';
         const isChecked = categoryVisibility[cat];
 
         const label = document.createElement('label');
         label.className = `filter-chip ${colorClass}${isChecked ? ' is-checked' : ''}`;
-        label.title = cat;
-
+        
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.checked = isChecked;
         input.addEventListener('change', () => {
             categoryVisibility[cat] = input.checked;
             label.classList.toggle('is-checked', input.checked);
-            renderCalendar();
+            renderAllViews();
         });
 
         const dot = document.createElement('span');
         dot.className = 'filter-chip-dot';
-
         const text = document.createElement('span');
         text.textContent = cat;
 
@@ -361,69 +175,127 @@ function rebuildCategoryFilter() {
     });
 }
 
-// ==========================================================================
-// UI Rendering Functions
-// ==========================================================================
-
-// 年月表示の更新
-function updateHeader() {
-    elCurrentMonthYear.textContent = `${currentYear}年 ${currentMonth + 1}月`;
+function renderAllViews() {
+    renderCalendarBoards();
+    renderTableView();
 }
 
-// カレンダーの描画
-function renderCalendar() {
-    elCalendarGrid.innerHTML = '';
+// ==========================================================================
+// Tooltip Handlers
+// ==========================================================================
+function handleTaskMouseOver(e, task) {
+    const rect = e.target.getBoundingClientRect();
+    elTooltipTitle.textContent = task.title || '';
+    elTooltipDesc.textContent = task.description || '';
     
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay  = new Date(currentYear, currentMonth + 1, 0);
+    // カーソル付近（タスク位置）に表示。固定配置なので scrollY は足さない
+    let top = e.clientY + 15;
+    let left = e.clientX + 15;
+    
+    // 画面下部や右端にはみ出さないよう簡易調整
+    if (top + 80 > window.innerHeight) top = e.clientY - 80;
+    if (left + 250 > window.innerWidth) left = window.innerWidth - 260;
+    
+    elTooltip.style.top = top + 'px';
+    elTooltip.style.left = left + 'px';
+    elTooltip.classList.add('show');
+}
+
+function handleTaskMouseOut() {
+    elTooltip.classList.remove('show');
+}
+
+// ==========================================================================
+// Calendar View Rendering (Multi-Month)
+// ==========================================================================
+function renderCalendarBoards() {
+    elBoardsWrapper.innerHTML = '';
+    
+    // 描画用のポジション解決 (フィルタはかけず、全て計算する)
+    // ※半透明にするため、非表示タスクも位置を確保する
+    const resolvedTasks = resolveTaskPositions(activeTasks);
+    
+    const startOffset = -pastMonths;
+    const endOffset = futureMonths;
+    
+    for (let i = startOffset; i <= endOffset; i++) {
+        // 対象の年月
+        const targetDate = new Date(currentBaseYear, currentBaseMonth + i, 1);
+        const y = targetDate.getFullYear();
+        const m = targetDate.getMonth();
+        
+        const board = createSingleMonthBoard(y, m, resolvedTasks);
+        
+        // 「現在月」のボードには特定idを付与してスクロールの目印にする
+        if (i === 0) {
+            board.id = "current-month-board";
+        }
+        elBoardsWrapper.appendChild(board);
+    }
+}
+
+function createSingleMonthBoard(year, month, resolvedTasks) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'month-board';
+    
+    // ヘッダー (〇年〇月)
+    const header = document.createElement('div');
+    header.className = 'month-header';
+    const title = document.createElement('h2');
+    title.className = 'month-title';
+    title.textContent = `${year}年 ${month + 1}月`;
+    header.appendChild(title);
+    
+    // カレンダーボード
+    const board = document.createElement('div');
+    board.className = 'calendar-board';
+    
+    // 曜日
+    const weekdays = document.createElement('div');
+    weekdays.className = 'calendar-weekdays';
+    ["月", "火", "水", "木", "金", "土", "日"].forEach((wd, i) => {
+        const div = document.createElement('div');
+        div.textContent = wd;
+        if (i >= 5) div.className = 'weekend'; // 土日は色変えなど
+        weekdays.appendChild(div);
+    });
+    board.appendChild(weekdays);
+    
+    // グリッド
+    const grid = document.createElement('div');
+    grid.className = 'calendar-grid';
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
     const lastDate = lastDay.getDate();
+    let firstDayIndex = (firstDay.getDay() + 6) % 7; // 月曜始まり
     
-    let firstDayIndex = (firstDay.getDay() + 6) % 7;
-    
-    const prevMonthLastDay  = new Date(currentYear, currentMonth, 0);
-    const prevMonthLastDate = prevMonthLastDay.getDate();
+    const prevMonthLastDate = new Date(year, month, 0).getDate();
     
     const calendarDays = [];
-    
-    // 1. 前月の日付
     for (let i = firstDayIndex; i > 0; i--) {
-        const d = new Date(currentYear, currentMonth - 1, prevMonthLastDate - i + 1);
+        const d = new Date(year, month - 1, prevMonthLastDate - i + 1);
         calendarDays.push({ date: d, isCurrentMonth: false, dateStr: formatDate(d) });
     }
-    
-    // 2. 当月の日付
     for (let i = 1; i <= lastDate; i++) {
-        const d = new Date(currentYear, currentMonth, i);
+        const d = new Date(year, month, i);
         calendarDays.push({ date: d, isCurrentMonth: true, dateStr: formatDate(d) });
     }
-    
-    // 3. 翌月の日付（合計42セル）
     const totalSlots = 42;
     const nextDaysCount = totalSlots - calendarDays.length;
     for (let i = 1; i <= nextDaysCount; i++) {
-        const d = new Date(currentYear, currentMonth + 1, i);
+        const d = new Date(year, month + 1, i);
         calendarDays.push({ date: d, isCurrentMonth: false, dateStr: formatDate(d) });
     }
 
-    // カテゴリフィルターで絞り込んだタスクのみ描画対象にする
-    const visibleTasks = activeTasks.filter(task => {
-        const cat = (task.category && task.category.trim()) ? task.category.trim() : '未分類';
-        return categoryVisibility[cat] !== false;
-    });
-
-    // 表示対象タスクのみでポジション解決（非表示タスクの隙間を詰める）
-    const resolvedTasks = resolveTaskPositions(visibleTasks);
     const todayStr = formatDate(new Date());
 
     calendarDays.forEach((dayInfo, index) => {
         const dayCell = document.createElement('div');
         dayCell.className = 'calendar-day';
         if (!dayInfo.isCurrentMonth) dayCell.classList.add('other-month');
-        if (dayInfo.dateStr === todayStr)  dayCell.classList.add('today');
+        if (dayInfo.dateStr === todayStr) dayCell.classList.add('today');
 
-        const dayOfWeekIndex = index % 7;
-
-        // 日付の数字
         const dayNumberContainer = document.createElement('div');
         dayNumberContainer.className = 'day-number-container';
         const dayNumber = document.createElement('span');
@@ -432,17 +304,13 @@ function renderCalendar() {
         dayNumberContainer.appendChild(dayNumber);
         dayCell.appendChild(dayNumberContainer);
 
-        // その日のタスク
-        const tasksForThisDay = resolvedTasks.filter(task =>
-            task.expandedDates.includes(dayInfo.dateStr)
-        );
+        const tasksForThisDay = resolvedTasks.filter(task => task.expandedDates.includes(dayInfo.dateStr));
 
         if (tasksForThisDay.length > 0) {
             const taskContainer = document.createElement('div');
             taskContainer.className = 'task-container';
-
             const maxSlot = Math.max(...tasksForThisDay.map(t => t.resolvedPosition), 0);
-
+            
             for (let slot = 1; slot <= maxSlot; slot++) {
                 const taskInSlot = tasksForThisDay.find(t => t.resolvedPosition === slot);
                 const slotDiv = document.createElement('div');
@@ -450,16 +318,27 @@ function renderCalendar() {
 
                 if (taskInSlot) {
                     const taskBar = document.createElement('div');
-                    taskBar.className = `task-bar ${taskInSlot.color || 'grad-1'}`;
+                    const colorClass = taskInSlot.color || 'grad-1';
+                    taskBar.className = `task-bar ${colorClass}`;
                     
-                    const catLabel = (taskInSlot.category && taskInSlot.category.trim()) ? taskInSlot.category.trim() : '未分類';
-                    taskBar.textContent = taskInSlot.title;
-                    taskBar.title = `[${catLabel}] ${taskInSlot.title} (段:${slot})`;
+                    const cat = (taskInSlot.category && taskInSlot.category.trim()) ? taskInSlot.category.trim() : '未分類';
+                    // フィルタOFFの場合は半透明クラスを付与
+                    if (categoryVisibility[cat] === false) {
+                        taskBar.classList.add('task-inactive');
+                    }
 
-                    // 期間内位置によるスタイル分岐
+                    taskBar.textContent = taskInSlot.title;
+                    
+                    // ホバーイベント
+                    if (categoryVisibility[cat] !== false) {
+                        taskBar.addEventListener('mouseenter', (e) => handleTaskMouseOver(e, taskInSlot));
+                        taskBar.addEventListener('mouseleave', handleTaskMouseOut);
+                    }
+
                     const dateIndex = taskInSlot.expandedDates.indexOf(dayInfo.dateStr);
-                    const isStart   = dateIndex === 0;
-                    const isEnd     = dateIndex === taskInSlot.expandedDates.length - 1;
+                    const isStart = dateIndex === 0;
+                    const isEnd = dateIndex === taskInSlot.expandedDates.length - 1;
+                    const dayOfWeekIndex = index % 7;
 
                     if (taskInSlot.expandedDates.length === 1) {
                         taskBar.classList.add('task-single');
@@ -474,97 +353,251 @@ function renderCalendar() {
                         if (dayOfWeekIndex === 0) taskBar.classList.add('week-start-middle');
                         else if (dayOfWeekIndex === 6) taskBar.classList.add('week-end-middle');
                     }
-
                     slotDiv.appendChild(taskBar);
                 }
-
                 taskContainer.appendChild(slotDiv);
             }
             dayCell.appendChild(taskContainer);
         }
+        grid.appendChild(dayCell);
+    });
 
-        elCalendarGrid.appendChild(dayCell);
+    board.appendChild(grid);
+    wrapper.appendChild(header);
+    wrapper.appendChild(board);
+    return wrapper;
+}
+
+function scrollToCurrentMonth() {
+    const currentBoard = document.getElementById('current-month-board');
+    if (currentBoard) {
+        // ヘッダーの高さ分を考慮してスクロールする
+        const y = currentBoard.getBoundingClientRect().top + window.scrollY - 150;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+}
+
+// ==========================================================================
+// Table View Rendering
+// ==========================================================================
+function renderTableView() {
+    elTableBody.innerHTML = '';
+    
+    // 表示対象のみフィルタリング
+    const visibleTasks = activeTasks.filter(task => {
+        const cat = (task.category && task.category.trim()) ? task.category.trim() : '未分類';
+        return categoryVisibility[cat] !== false;
+    });
+
+    // 日付順に整理するためのマップ
+    const dateTaskMap = {};
+    visibleTasks.forEach(task => {
+        const dates = expandTaskDates(task.dates || []);
+        dates.forEach(dStr => {
+            if (!dateTaskMap[dStr]) dateTaskMap[dStr] = [];
+            dateTaskMap[dStr].push(task);
+        });
+    });
+
+    const sortedDates = Object.keys(dateTaskMap).sort();
+
+    sortedDates.forEach(dStr => {
+        const tasksObjList = dateTaskMap[dStr];
+        const d = parseDate(dStr);
+        const dayOfWeek = WEEKDAYS[d.getDay()];
+        
+        // 同じ日のタスクを1行にまとめる (複数タスクは div 等で縦並べ)
+        const tr = document.createElement('tr');
+        
+        const tdDate = document.createElement('td');
+        tdDate.textContent = dStr;
+        
+        const tdDay = document.createElement('td');
+        tdDay.textContent = dayOfWeek;
+        
+        const tdCat = document.createElement('td');
+        const tdTitle = document.createElement('td');
+        const tdDesc = document.createElement('td');
+
+        tasksObjList.forEach(task => {
+            const cat = task.category || '未分類';
+            const colorClass = task.color || 'grad-1';
+            
+            // カテゴリ
+            const catDiv = document.createElement('div');
+            catDiv.style.marginBottom = '0.5rem';
+            catDiv.innerHTML = `<span class="table-color-dot ${colorClass}"></span>${cat}`;
+            tdCat.appendChild(catDiv);
+            
+            // タスク名
+            const titleDiv = document.createElement('div');
+            titleDiv.style.marginBottom = '0.5rem';
+            titleDiv.textContent = task.title;
+            tdTitle.appendChild(titleDiv);
+            
+            // 詳細
+            const descDiv = document.createElement('div');
+            descDiv.style.marginBottom = '0.5rem';
+            descDiv.textContent = task.description || '-';
+            tdDesc.appendChild(descDiv);
+        });
+        
+        tr.appendChild(tdDate);
+        tr.appendChild(tdDay);
+        tr.appendChild(tdCat);
+        tr.appendChild(tdTitle);
+        tr.appendChild(tdDesc);
+        
+        elTableBody.appendChild(tr);
     });
 }
 
 // ==========================================================================
-// JSON Editor Handlers
+// Export / Download Standalone HTML
+// ==========================================================================
+async function exportStandaloneHTML() {
+    try {
+        // 現在の CSS を取得
+        let cssText = '';
+        for (const sheet of document.styleSheets) {
+            try {
+                if (sheet.href && !sheet.href.includes('googleapis')) {
+                    const res = await fetch(sheet.href);
+                    cssText += await res.text();
+                } else if (!sheet.href) {
+                    for (const rule of sheet.cssRules) {
+                        cssText += rule.cssText + '\n';
+                    }
+                }
+            } catch (e) { console.warn("Cannot read stylesheet", e); }
+        }
+        // フォールバックとして元のファイルを fetch する
+        if (!cssText) {
+            const res = await fetch('style.css');
+            cssText = await res.text();
+        }
+
+        // 現在の JS (app.js) を取得
+        const resJs = await fetch('app.js');
+        const jsText = await resJs.text();
+
+        // ベースの HTML を取得してインライン化する
+        // DOMのクローンを作ってスクリプトタグ等を置き換える方法もあるが、
+        // 開発環境と結合するためのシンプルな文字列置換を行う
+        const resHtml = await fetch('index.html');
+        let htmlText = await resHtml.text();
+
+        // スタイルシートリンクをインラインCSSに置換
+        htmlText = htmlText.replace(/<link rel="stylesheet" href="style\.css">/, `<style>\n${cssText}\n</style>`);
+        
+        // データ読み込み部分のJSを改変し、埋め込んだ変数を使うようにする
+        const embeddedData = JSON.stringify(activeTasks, null, 2);
+        const embeddedJs = `
+// --- INJECTED DATA ---
+const embeddedTasksData = ${embeddedData};
+// ---------------------
+` + jsText.replace(
+            /const res = await fetch\('data\.json'\);\s*if \(!res\.ok\) throw new Error\([^)]*\);\s*const data = await res\.json\(\);/,
+            `const data = embeddedTasksData;`
+        );
+
+        // スクリプトタグをインラインJSに置換
+        htmlText = htmlText.replace(/<script src="app\.js"><\/script>/, `<script>\n${embeddedJs}\n<\/script>`);
+
+        // ダウンロード
+        const blob = new Blob([htmlText], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `task_calendar_standalone_${formatDate(new Date())}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        alert("エクスポート中にエラーが発生しました: " + e.message);
+    }
+}
+
+// ==========================================================================
+// Event Listeners & Settings
 // ==========================================================================
 
-function applyEditorJson() {
-    const rawVal = elJsonEditor.value;
+// Theme Toggle
+elBtnThemeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const isLight = document.body.classList.contains('light-mode');
+    localStorage.setItem('calendarTheme', isLight ? 'light' : 'dark');
+});
+
+// View Toggles
+elBtnViewCalendar.addEventListener('click', () => {
+    elBtnViewCalendar.classList.add('active');
+    elBtnViewTable.classList.remove('active');
+    elCalendarContainer.classList.add('active');
+    elTableContainer.classList.remove('active');
+});
+
+elBtnViewTable.addEventListener('click', () => {
+    elBtnViewTable.classList.add('active');
+    elBtnViewCalendar.classList.remove('active');
+    elTableContainer.classList.add('active');
+    elCalendarContainer.classList.remove('active');
+});
+
+// Settings Modal
+elBtnSettings.addEventListener('click', () => {
+    elInputPast.value = pastMonths;
+    elInputFuture.value = futureMonths;
+    elJsonEditor.value = JSON.stringify(activeTasks, null, 4);
+    elJsonStatus.textContent = "Valid JSON";
+    elJsonStatus.className = "status-valid";
+    elJsonError.style.display = "none";
+    elJsonEditor.style.borderColor = "";
+    elModal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+});
+
+function closeModal() {
+    elModal.classList.remove('is-open');
+    document.body.style.overflow = '';
+}
+elBtnModalClose.addEventListener('click', closeModal);
+elModal.addEventListener('click', (e) => {
+    if (e.target === elModal) closeModal();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && elModal.classList.contains('is-open')) closeModal();
+});
+
+// Apply Settings
+elBtnApply.addEventListener('click', () => {
     try {
+        const rawVal = elJsonEditor.value;
         const parsed = JSON.parse(rawVal);
-        if (!Array.isArray(parsed)) {
-            throw new Error("JSONのルートは配列（タスクのリスト）でなければなりません。");
-        }
+        if (!Array.isArray(parsed)) throw new Error("JSONは配列である必要があります");
         
         activeTasks = parsed;
+        pastMonths = parseInt(elInputPast.value, 10) || 0;
+        futureMonths = parseInt(elInputFuture.value, 10) || 0;
         
-        elJsonStatus.textContent = "Valid JSON";
-        elJsonStatus.className   = "status-valid";
-        elJsonError.style.display = "none";
-        elJsonEditor.style.borderColor = "";
-
-        // カテゴリフィルター再構築 → カレンダー再描画
         rebuildCategoryFilter();
-        renderCalendar();
-
-        // 適用成功時にモーダルを閉じる
+        renderAllViews();
         closeModal();
-    } catch (e) {
+    } catch(e) {
         elJsonStatus.textContent = "Invalid JSON";
         elJsonStatus.className   = "status-invalid";
         elJsonError.textContent  = e.message;
         elJsonError.style.display = "block";
         elJsonEditor.style.borderColor = "var(--error-color)";
     }
-}
-
-// プリセットデータの読み込み
-function loadPreset(key) {
-    if (presets[key]) {
-        elJsonEditor.value = JSON.stringify(presets[key], null, 4);
-        applyEditorJson();
-    }
-}
-
-// ==========================================================================
-// Event Listeners Setup
-// ==========================================================================
-
-elBtnPrev.addEventListener('click', () => {
-    currentMonth--;
-    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-    updateHeader();
-    renderCalendar();
 });
 
-elBtnNext.addEventListener('click', () => {
-    currentMonth++;
-    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-    updateHeader();
-    renderCalendar();
-});
-
-elBtnToday.addEventListener('click', () => {
-    const now = new Date();
-    currentYear  = now.getFullYear();
-    currentMonth = now.getMonth();
-    updateHeader();
-    renderCalendar();
-});
-
-elBtnApply.addEventListener('click', applyEditorJson);
-
-// エディタ上のタイピングに応じて自動検証（エラー表示のみ、モーダルは閉じない）
+// JSON Auto validation during typing
 let editTimeout;
 elJsonEditor.addEventListener('input', () => {
     clearTimeout(editTimeout);
     editTimeout = setTimeout(() => {
-        const rawVal = elJsonEditor.value;
         try {
-            const parsed = JSON.parse(rawVal);
+            const parsed = JSON.parse(elJsonEditor.value);
             if (!Array.isArray(parsed)) throw new Error("配列が必要です");
             elJsonStatus.textContent = "Valid JSON";
             elJsonStatus.className   = "status-valid";
@@ -580,20 +613,20 @@ elJsonEditor.addEventListener('input', () => {
     }, 400);
 });
 
-// プリセットボタン
-elPresetDefault.addEventListener('click',  () => loadPreset('default'));
-elPresetMultiDay.addEventListener('click', () => loadPreset('multiDay'));
-elPresetOverlap.addEventListener('click',  () => loadPreset('overlap'));
+// Download button
+elBtnDownload.addEventListener('click', exportStandaloneHTML);
 
 // ==========================================================================
-// Initialization
+// Boot
 // ==========================================================================
 function init() {
-    currentYear  = 2026;
-    currentMonth = 0;
+    // Restore Theme
+    if (localStorage.getItem('calendarTheme') === 'light') {
+        document.body.classList.add('light-mode');
+    }
     
-    updateHeader();
-    loadPreset('default'); // applyEditorJson → rebuildCategoryFilter → renderCalendar まで連鎖
+    // Load external data
+    loadData();
 }
 
 window.addEventListener('DOMContentLoaded', init);
